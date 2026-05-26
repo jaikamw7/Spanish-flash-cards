@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nicaraguan Spanish Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #1a3a5c;
+    --sky-light: #2a5a8c;
+    --gold: #e8b44a;
+    --gold-light: #f5d080;
+    --cream: #faf6ee;
+    --white: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --green: #2d6a4f;
+    --red: #c0392b;
+    --card-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sky);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(232,180,74,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .flag-stripe {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .flag-stripe span {
+    display: block;
+    width: 40px;
+    height: 5px;
+    border-radius: 99px;
+  }
+  .flag-stripe .blue { background: #1e5fa8; }
+  .flag-stripe .white { background: rgba(255,255,255,0.85); }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--white);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  header p {
+    margin-top: 10px;
+    color: rgba(255,255,255,0.55);
+    font-size: 0.95rem;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  /* Controls bar */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tab {
+    padding: 7px 16px;
+    border-radius: 99px;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.65);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .tab:hover { border-color: var(--gold); color: var(--gold); }
+  .tab.active { background: var(--gold); border-color: var(--gold); color: var(--sky); }
+
+  .stats {
+    color: rgba(255,255,255,0.45);
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .stats strong { color: var(--gold); }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* Card area */
+  .card-area {
+    perspective: 1200px;
+    margin-bottom: 28px;
+  }
+
+  .card-wrapper {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .card-wrapper.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+  }
+
+  .card-front {
+    background: var(--cream);
+  }
+
+  .card-back {
+    background: linear-gradient(145deg, #0f2440, #1a3a5c);
+    border: 1px solid rgba(232,180,74,0.3);
+    transform: rotateY(180deg);
+  }
+
+  .card-category {
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    padding: 4px 14px;
+    border-radius: 99px;
+  }
+
+  .card-front .card-category {
+    background: rgba(26,58,92,0.08);
+    color: var(--sky);
+  }
+
+  .card-back .card-category {
+    background: rgba(232,180,74,0.15);
+    color: var(--gold);
+  }
+
+  .card-main {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .card-front .card-main { color: var(--sky); }
+  .card-back .card-main { color: var(--white); }
+
+  .card-sub {
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 460px;
+  }
+
+  .card-front .card-sub { color: var(--muted); }
+  .card-back .card-sub { color: rgba(255,255,255,0.6); font-style: italic; }
+
+  .card-note {
+    margin-top: 16px;
+    font-size: 0.8rem;
+    padding: 8px 16px;
+    border-radius: 10px;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .card-front .card-note {
+    background: rgba(26,58,92,0.06);
+    color: var(--sky-light);
+  }
+
+  .card-back .card-note {
+    background: rgba(232,180,74,0.1);
+    color: var(--gold-light);
+  }
+
+  .flip-hint {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    font-size: 0.72rem;
+    opacity: 0.4;
+    letter-spacing: 0.5px;
+  }
+
+  .card-front .flip-hint { color: var(--sky); }
+  .card-back .flip-hint { color: var(--white); }
+
+  /* Navigation */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .nav-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: var(--white);
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(232,180,74,0.08); }
+  .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+  .card-counter {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.5);
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .card-counter strong { color: var(--white); font-size: 1.1rem; }
+
+  /* Score buttons */
+  .score-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .score-btn {
+    padding: 10px 28px;
+    border-radius: 99px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .score-btn.knew { background: var(--green); color: #fff; }
+  .score-btn.knew:hover { background: #3a8a64; transform: translateY(-1px); }
+  .score-btn.didnt { background: rgba(192,57,43,0.85); color: #fff; }
+  .score-btn.didnt:hover { background: var(--red); transform: translateY(-1px); }
+  .score-btn.skip { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.15); }
+  .score-btn.skip:hover { background: rgba(255,255,255,0.15); }
+
+  .score-feedback {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.4);
+  }
+  .score-feedback strong { color: var(--gold); }
+
+  /* Shuffle btn */
+  .bottom-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .action-btn {
+    padding: 9px 22px;
+    border-radius: 99px;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="flag-stripe">
+      <span class="blue"></span>
+      <span class="white"></span>
+      <span class="blue"></span>
+    </div>
+    <h1>Español <em>Nica</em></h1>
+    <p>Nicaraguan Spanish flashcards — vocabulary, past tenses & everyday conversation</p>
+  </header>
+
+  <div class="controls">
+    <div class="category-tabs" id="tabs"></div>
+    <div class="stats">Learned: <strong id="learnedCount">0</strong> / <span id="totalCount">0</span></div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <div class="card-area">
+    <div class="card-wrapper" id="cardWrapper" onclick="flipCard()">
+      <div class="card-face card-front">
+        <div class="card-category" id="frontCat"></div>
+        <div class="card-main" id="frontMain"></div>
+        <div class="card-sub" id="frontSub"></div>
+        <div class="card-note" id="frontNote" style="display:none"></div>
+        <div class="flip-hint">tap to flip</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-category" id="backCat"></div>
+        <div class="card-main" id="backMain"></div>
+        <div class="card-sub" id="backSub"></div>
+        <div class="card-note" id="backNote" style="display:none"></div>
+        <div class="flip-hint">tap to flip</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" id="prevBtn" onclick="prevCard()">&#8592;</button>
+    <div class="card-counter"><strong id="cardNum">1</strong> <span id="cardSlash">/ 0</span></div>
+    <button class="nav-btn" id="nextBtn" onclick="nextCard()">&#8594;</button>
+  </div>
+
+  <div class="score-btns" id="scoreBtns">
+    <button class="score-btn didnt" onclick="markCard(false)">✗ Didn't know</button>
+    <button class="score-btn knew" onclick="markCard(true)">✓ Got it</button>
+  </div>
+  <div class="score-feedback" id="scoreFeedback">Mark whether you knew the card to track progress</div>
+
+  <div class="bottom-actions">
+    <button class="action-btn" onclick="shuffleDeck()">⇄ Shuffle</button>
+    <button class="action-btn" onclick="resetProgress()">↺ Reset progress</button>
+    <button class="action-btn" onclick="reviewMissed()">★ Review missed</button>
+  </div>
+
+</div>
+
+<script>
+const ALL_CARDS = [
+
+  // ── EVERYDAY GREETINGS & EXPRESSIONS ──
+  { cat: "Greetings", es: "¿Qué ondas?", en: "What's up? / What's going on?", note: "Classic Nica slang greeting, used all the time with friends and family." },
+  { cat: "Greetings", es: "¿Cómo amaneciste?", en: "How did you wake up? / How are you this morning?", note: "Very common morning greeting in Nicaragua." },
+  { cat: "Greetings", es: "¿Y vos, qué?", en: "And you, what's up?", note: "Nicas use 'vos' instead of 'tú' — this is extremely common." },
+  { cat: "Greetings", es: "Bien relajado.", en: "Nice and relaxed / Chilling.", note: "Casual response to 'how are you.'" },
+  { cat: "Greetings", es: "¡Qué milagro!", en: "What a miracle! (said when you haven't seen someone in a while)", note: "Warm, affectionate expression." },
+  { cat: "Greetings", es: "Con permiso.", en: "Excuse me / With your permission.", note: "Used when passing by someone or leaving a room." },
+  { cat: "Greetings", es: "Hasta luego, pues.", en: "Goodbye then.", note: "'Pues' is added constantly at the end of sentences in Nica Spanish." },
+  { cat: "Greetings", es: "Buenas.", en: "Hi / Good (morning/afternoon/evening).", note: "Shorthand for any 'buenos días/tardes/noches' — very casual and common." },
+
+  // ── VOS (NICARAGUAN TÚ) ──
+  { cat: "Vos forms", es: "¿Qué querés vos?", en: "What do you want?", note: "'Vos querés' = 'tú quieres'. Vos is standard in Nicaragua." },
+  { cat: "Vos forms", es: "¿Sabés qué pasó?", en: "Do you know what happened?", note: "'Vos sabés' replaces 'tú sabes'." },
+  { cat: "Vos forms", es: "¿Ya comiste?", en: "Did you already eat?", note: "Past tense + vos context. Preterite is the same with vos." },
+  { cat: "Vos forms", es: "Vení aquí.", en: "Come here.", note: "Vos imperative: 'vení' instead of 'ven'." },
+  { cat: "Vos forms", es: "¿Cuándo llegás?", en: "When are you arriving?", note: "Present tense with vos: 'llegás' instead of 'llegas'." },
+  { cat: "Vos forms", es: "Hacé lo que querás.", en: "Do whatever you want.", note: "Subjunctive with vos — 'querás' instead of 'quieras'." },
+  { cat: "Vos forms", es: "¿Tenés tiempo?", en: "Do you have time?", note: "'Tenés' instead of 'tienes'." },
+  { cat: "Vos forms", es: "¿Dónde vivís vos?", en: "Where do you live?", note: "'Vivís' instead of 'vives'." },
+
+  // ── PAST TENSE: PRETERITE ──
+  { cat: "Past: Preterite", es: "Ayer fui al mercado.", en: "Yesterday I went to the market.", note: "Ir/ser → fui, fuiste, fue, fuimos, fueron." },
+  { cat: "Past: Preterite", es: "¿Qué hiciste el fin de semana?", en: "What did you do over the weekend?", note: "Hacer → hice, hiciste, hizo, hicimos, hicieron." },
+  { cat: "Past: Preterite", es: "Llegué tarde a la cena.", en: "I arrived late to dinner.", note: "Llegar → llegué, llegaste, llegó." },
+  { cat: "Past: Preterite", es: "Nos comimos todo el gallo pinto.", en: "We ate all the gallo pinto.", note: "Common Nica dish. Comer → comí, comiste, comió, comimos." },
+  { cat: "Past: Preterite", es: "Ella me llamó anoche.", en: "She called me last night.", note: "Llamar → llamé, llamaste, llamó." },
+  { cat: "Past: Preterite", es: "¿Cuándo llegaron ellos?", en: "When did they arrive?", note: "Llegar → llegaron (ellos)." },
+  { cat: "Past: Preterite", es: "Fui con mi papá al campo.", en: "I went with my dad to the countryside.", note: "El campo = countryside/rural area, very meaningful in Nicaraguan life." },
+  { cat: "Past: Preterite", es: "¿Viste el partido anoche?", en: "Did you watch the game last night?", note: "Ver → vi, viste, vio, vimos, vieron." },
+  { cat: "Past: Preterite", es: "Dormí como un tronco.", en: "I slept like a log.", note: "Dormir → dormí, dormiste, durmió." },
+  { cat: "Past: Preterite", es: "Le dije que no podía ir.", en: "I told him/her I couldn't go.", note: "Decir → dije, dijiste, dijo. Poder → podía (imperfect)." },
+  { cat: "Past: Preterite", es: "Se me olvidó el nombre.", en: "I forgot the name.", note: "Reflexive olvidar: 'se me olvidó' = it slipped from me." },
+  { cat: "Past: Preterite", es: "Tuvimos una fiesta enorme.", en: "We had a huge party.", note: "Tener → tuve, tuviste, tuvo, tuvimos, tuvieron." },
+
+  // ── PAST TENSE: IMPERFECT ──
+  { cat: "Past: Imperfect", es: "Cuando era niño, jugaba en la calle.", en: "When I was a kid, I used to play in the street.", note: "Imperfect: ongoing/habitual past. Jugar → jugaba." },
+  { cat: "Past: Imperfect", es: "Siempre comíamos juntos los domingos.", en: "We always ate together on Sundays.", note: "Comer → comía, comías, comía, comíamos, comían." },
+  { cat: "Past: Imperfect", es: "Mi abuela hacía el mejor vigorón.", en: "My grandmother used to make the best vigorón.", note: "Vigorón is a classic Nicaraguan dish." },
+  { cat: "Past: Imperfect", es: "Antes vivíamos en Managua.", en: "We used to live in Managua.", note: "Vivir → vivía, vivías, vivía, vivíamos, vivían." },
+  { cat: "Past: Imperfect", es: "Él siempre llegaba tarde.", en: "He always used to arrive late.", note: "Imperfect for habitual past actions." },
+  { cat: "Past: Imperfect", es: "Era muy difícil conseguir trabajo.", en: "It was very hard to find work.", note: "Ser → era, eras, era, éramos, eran." },
+  { cat: "Past: Imperfect", es: "Cuando vivía allá, iba al lago todos los días.", en: "When I lived there, I went to the lake every day.", note: "Lago de Nicaragua (Lake Cocibolca) is deeply important culturally." },
+  { cat: "Past: Imperfect", es: "No sabía que vos venías.", en: "I didn't know you were coming.", note: "Saber → sabía, combined with vos form 'venías'." },
+
+  // ── PAST TENSE: PRESENT PERFECT ──
+  { cat: "Past: Perfect", es: "He comido demasiado.", en: "I have eaten too much.", note: "Haber + past participle. Haber → he, has, ha, hemos, han." },
+  { cat: "Past: Perfect", es: "¿Ya has ido a Granada?", en: "Have you already been to Granada?", note: "Granada is one of Nicaragua's most beautiful colonial cities." },
+  { cat: "Past: Perfect", es: "Todavía no he terminado.", en: "I still haven't finished.", note: "Todavía no + present perfect = very common structure." },
+  { cat: "Past: Perfect", es: "Hemos vivido aquí toda la vida.", en: "We have lived here our whole lives.", note: "Toda la vida = all my/our life — very emotive expression." },
+  { cat: "Past: Perfect", es: "¿Le has dicho algo a tu papá?", en: "Have you told your dad anything?", note: "Decir → dicho (irregular past participle)." },
+  { cat: "Past: Perfect", es: "Nunca he visto algo así.", en: "I have never seen anything like that.", note: "Ver → visto (irregular past participle)." },
+
+  // ── FAMILY & RELATIONSHIPS ──
+  { cat: "Family", es: "mi familia, los míos", en: "my family, my people", note: "'Los míos' is a warm, inclusive way to refer to your family/close ones." },
+  { cat: "Family", es: "el chigüín / la chigüina", en: "the kid / the little one", note: "Nicaraguan slang for a child. Very common." },
+  { cat: "Family", es: "la cipote / el cipote", en: "the kid (young child)", note: "Another very Nicaraguan word for child." },
+  { cat: "Family", es: "mi viejo / mi vieja", en: "my old man / my mom", note: "Affectionate terms for parents. Very common in everyday speech." },
+  { cat: "Family", es: "el cuñado / la cuñada", en: "brother-in-law / sister-in-law", note: "Also used loosely for close friends: '¡Qué ondas, cuñado!'" },
+  { cat: "Family", es: "el suegro / la suegra", en: "father-in-law / mother-in-law", note: "" },
+  { cat: "Family", es: "el sobrino / la sobrina", en: "nephew / niece", note: "" },
+  { cat: "Family", es: "¿Cómo está toda la familia?", en: "How is the whole family?", note: "Common, warm conversation opener." },
+  { cat: "Family", es: "Manda saludos a todos.", en: "Send greetings to everyone.", note: "Said at the end of conversations with family." },
+
+  // ── FOOD & EATING ──
+  { cat: "Food", es: "el gallo pinto", en: "rice and beans (Nicaragua's national dish)", note: "Eaten at breakfast, lunch, and dinner — knowing this is essential!" },
+  { cat: "Food", es: "la quesillo", en: "a rolled corn tortilla with cheese and cream", note: "Classic Nicaraguan street food, especially from Nagarote." },
+  { cat: "Food", es: "el nacatamal", en: "Nicaraguan tamale (corn dough stuffed with pork, rice, etc.)", note: "Often eaten on Sundays or for special occasions." },
+  { cat: "Food", es: "el vigorón", en: "yuca with pork rinds and cabbage salad", note: "Traditional dish from Granada." },
+  { cat: "Food", es: "¿Ya está lista la comida?", en: "Is the food ready yet?", note: "" },
+  { cat: "Food", es: "Me muero de hambre.", en: "I'm starving. (literally: I'm dying of hunger)", note: "Very common hyperbolic expression." },
+  { cat: "Food", es: "¡Qué rico estaba!", en: "That was delicious!", note: "Preterite of estar — 'it was so good!'" },
+  { cat: "Food", es: "¿Me servís un poquito más?", en: "Can you serve me a little more?", note: "Vos form of servir used at the table." },
+  { cat: "Food", es: "el chayote / el güisquil", en: "chayote squash", note: "Güisquil is the Nicaraguan/Central American name." },
+  { cat: "Food", es: "la cajeta de coco", en: "coconut candy / coconut sweet", note: "Traditional Nicaraguan sweet." },
+
+  // ── NICARAGUAN SLANG ──
+  { cat: "Slang", es: "¡Qué chévere!", en: "How cool! / Awesome!", note: "Used across Latin America including Nicaragua." },
+  { cat: "Slang", es: "chunche", en: "thing / whatchamacallit", note: "Quintessential Nicaraguan word. '¿Dónde está ese chunche?' = Where's that thing?" },
+  { cat: "Slang", es: "¡No jodás!", en: "No way! / Are you serious?!", note: "Strong expression of surprise. Can be rude depending on context — save for family." },
+  { cat: "Slang", es: "Está bravo/brava.", en: "He/she is angry.", note: "Bravo/brava = angry in Nicaraguan Spanish (not brave)." },
+  { cat: "Slang", es: "a la orden", en: "at your service / you're welcome", note: "Said after helping someone or when someone says gracias." },
+  { cat: "Slang", es: "Pura vida.", en: "All good / No problem / Life is good.", note: "More Costa Rican but heard in Nicaragua too." },
+  { cat: "Slang", es: "el cachimbo / un cachimbo de", en: "a ton of / a lot of", note: "'Tengo un cachimbo de trabajo.' = I have a ton of work." },
+  { cat: "Slang", es: "fritanga", en: "roadside grill / street food spot", note: "The quintessential Nicaraguan street food setup." },
+  { cat: "Slang", es: "andar breteando", en: "to be working / hustling", note: "'Breteando' = working hard, grinding." },
+  { cat: "Slang", es: "¡Upe!", en: "Hello? Anyone home?", note: "Said when arriving at someone's house instead of knocking." },
+  { cat: "Slang", es: "paja", en: "nonsense / lies / BS", note: "'Eso es pura paja.' = That's total nonsense." },
+  { cat: "Slang", es: "¡Qué bárbaro!", en: "Wow! / That's crazy! / No way!", note: "Can be positive or negative depending on tone." },
+
+  // ── DAILY LIFE & ERRANDS ──
+  { cat: "Daily Life", es: "Voy al mandado.", en: "I'm going to run errands / go to the store.", note: "'El mandado' = grocery run or errand. Very common Nicaraguan/Central American usage." },
+  { cat: "Daily Life", es: "¿A qué hora salís?", en: "What time are you leaving?", note: "Vos form of salir." },
+  { cat: "Daily Life", es: "Se me hizo tarde.", en: "I got late / It got late on me.", note: "Reflexive construction — very natural way to say you're running behind." },
+  { cat: "Daily Life", es: "Estoy ocupado/a ahorita.", en: "I'm busy right now.", note: "'Ahorita' in Nicaragua means 'right now' (differs from Mexico where it's vague)." },
+  { cat: "Daily Life", es: "¿Me hacés el favor?", en: "Can you do me a favor?", note: "Polite request using vos form." },
+  { cat: "Daily Life", es: "Andá con cuidado.", en: "Go carefully / Take care.", note: "Vos imperative of ir: 'andá' instead of 've'." },
+  { cat: "Daily Life", es: "Me cae bien.", en: "I like him/her (as a person).", note: "Caer bien = to like someone's personality." },
+  { cat: "Daily Life", es: "No me cae bien.", en: "I don't like him/her.", note: "Useful for gossip with family!" },
+  { cat: "Daily Life", es: "Hay que apurarse.", en: "We need to hurry up.", note: "Apurarse = to hurry." },
+  { cat: "Daily Life", es: "¿Cómo te fue?", en: "How did it go for you?", note: "Common question after someone comes home or does something." },
+
+  // ── EMOTIONS & FEELINGS ──
+  { cat: "Emotions", es: "Estoy agotado/a.", en: "I'm exhausted.", note: "Agotado/a = completely drained." },
+  { cat: "Emotions", es: "Me da mucha tristeza.", en: "It makes me very sad.", note: "Dar tristeza = a very natural way to express sadness." },
+  { cat: "Emotions", es: "Qué alegría verte.", en: "What a joy to see you.", note: "Warm expression for reuniting with loved ones." },
+  { cat: "Emotions", es: "Estoy nervioso/a.", en: "I'm nervous.", note: "" },
+  { cat: "Emotions", es: "Me pone furioso/a.", en: "It makes me furious.", note: "Poner + adj = to make someone feel a certain way." },
+  { cat: "Emotions", es: "¡Qué vergüenza!", en: "How embarrassing!", note: "Used when something is embarrassing or shameful." },
+  { cat: "Emotions", es: "Me da mucha risa.", en: "It makes me laugh a lot.", note: "Dar risa = to make someone laugh — natural expression." },
+  { cat: "Emotions", es: "Estoy muy orgulloso/a de vos.", en: "I'm very proud of you.", note: "With vos — used with family members." },
+  { cat: "Emotions", es: "Te extraño mucho.", en: "I miss you a lot.", note: "Extrañar = to miss (a person)." },
+  { cat: "Emotions", es: "Me cayó el veinte.", en: "It just hit me / I finally realized.", note: "Colloquial: 'the twenty dropped' = things clicked." },
+
+  // ── WEATHER & NATURE ──
+  { cat: "Weather", es: "Está cayendo un aguacero.", en: "A downpour is falling.", note: "Aguacero = heavy tropical rainstorm. Very common in Nicaragua." },
+  { cat: "Weather", es: "Hace un calor del diablo.", en: "It's devilishly hot.", note: "Nicaragua is hot — you'll need this one!" },
+  { cat: "Weather", es: "Está nublado.", en: "It's cloudy.", note: "" },
+  { cat: "Weather", es: "¿Va a llover hoy?", en: "Is it going to rain today?", note: "" },
+  { cat: "Weather", es: "El invierno ya llegó.", en: "The rainy season has arrived.", note: "In Nicaragua, 'invierno' (winter) = rainy season (May–October)." },
+  { cat: "Weather", es: "Qué brisa tan rica.", en: "What a lovely breeze.", note: "" },
+
+  // ── GIVING OPINIONS ──
+  { cat: "Opinions", es: "En mi opinión, lo mejor es...", en: "In my opinion, the best thing is...", note: "" },
+  { cat: "Opinions", es: "A mí me parece que...", en: "It seems to me that...", note: "Soft, polite way to share a view." },
+  { cat: "Opinions", es: "No estoy de acuerdo.", en: "I don't agree.", note: "" },
+  { cat: "Opinions", es: "Puede ser, pero...", en: "Could be, but...", note: "Diplomatic way to push back." },
+  { cat: "Opinions", es: "Lo que pasa es que...", en: "The thing is that...", note: "Common conversation filler to introduce an explanation." },
+  { cat: "Opinions", es: "Hay que verlo bien.", en: "You have to look at it carefully.", note: "Said before making a decision." },
+  { cat: "Opinions", es: "¿Y vos qué pensás?", en: "And what do you think? (vos form)", note: "Vos: pensás instead of piensas." },
+
+  // ── STORYTELLING & PAST NARRATIVES ──
+  { cat: "Storytelling", es: "Resulta que...", en: "It turns out that...", note: "Classic storytelling opener in Spanish." },
+  { cat: "Storytelling", es: "Fijate que...", en: "You know what... / Get this...", note: "Very Nicaraguan! Used to start a story or gossip." },
+  { cat: "Storytelling", es: "Y de repente...", en: "And suddenly...", note: "Good for adding drama to a story." },
+  { cat: "Storytelling", es: "Resulta que yo estaba en la calle cuando vi a mi prima.", en: "It turned out I was in the street when I saw my cousin.", note: "Mixing imperfect (estaba) with preterite (vi) — key storytelling skill." },
+  { cat: "Storytelling", es: "Al final, todo salió bien.", en: "In the end, everything turned out fine.", note: "Al final = in the end." },
+  { cat: "Storytelling", es: "No te imaginás lo que pasó.", en: "You can't imagine what happened.", note: "Great hook for a story. Vos form: 'imaginás'." },
+  { cat: "Storytelling", es: "Cuando llegué, ya se habían ido.", en: "When I arrived, they had already left.", note: "Past perfect: habían + past participle. Advanced!" },
+  { cat: "Storytelling", es: "Me la pasé de lo mejor.", en: "I had the best time.", note: "Pasársela bien/de lo mejor = to have a great time." },
+
+  // ── USEFUL PHRASES ──
+  { cat: "Useful Phrases", es: "No me acordé.", en: "I didn't remember.", note: "Acordarse → me acordé, te acordaste. Common." },
+  { cat: "Useful Phrases", es: "Se me fue el santo al cielo.", en: "I totally blanked / It slipped my mind.", note: "Idiomatic: 'the saint went to heaven' = you forgot completely." },
+  { cat: "Useful Phrases", es: "Poco a poco.", en: "Little by little.", note: "Great phrase for patience and progress — like language learning!" },
+  { cat: "Useful Phrases", es: "¿Cómo se dice...?", en: "How do you say...?", note: "Essential for language learners." },
+  { cat: "Useful Phrases", es: "¿Me podés repetir eso?", en: "Can you repeat that for me?", note: "Vos form of poder." },
+  { cat: "Useful Phrases", es: "Hablá más despacio, por favor.", en: "Speak more slowly, please.", note: "Vos imperative: 'hablá' instead of 'habla'." },
+  { cat: "Useful Phrases", es: "No te entendí bien.", en: "I didn't understand you well.", note: "Honest, natural way to ask for clarification." },
+  { cat: "Useful Phrases", es: "Ya entendí.", en: "I understood / I get it now.", note: "" },
+  { cat: "Useful Phrases", es: "Dicho y hecho.", en: "Said and done.", note: "Used to say something was done quickly/decisively." },
+  { cat: "Useful Phrases", es: "Con mucho gusto.", en: "With pleasure / My pleasure.", note: "Response to gracias — more formal than 'a la orden'." },
+];
+
+// State
+let deck = [...ALL_CARDS];
+let current = 0;
+let flipped = false;
+let learned = new Set();
+let missed = new Set();
+let activeCategory = "All";
+
+const CATEGORIES = ["All", ...new Set(ALL_CARDS.map(c => c.cat))];
+
+function getFilteredDeck() {
+  if (activeCategory === "All") return [...deck];
+  return deck.filter(c => c.cat === activeCategory);
+}
+
+let filteredDeck = getFilteredDeck();
+
+function buildTabs() {
+  const container = document.getElementById('tabs');
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (cat === activeCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => {
+      activeCategory = cat;
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filteredDeck = getFilteredDeck();
+      current = 0;
+      renderCard();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function renderCard() {
+  if (!filteredDeck.length) return;
+  const card = filteredDeck[current];
+  flipped = false;
+  document.getElementById('cardWrapper').classList.remove('flipped');
+
+  document.getElementById('frontCat').textContent = card.cat;
+  document.getElementById('frontMain').textContent = card.es;
+  document.getElementById('frontSub').textContent = "What does this mean?";
+  const fn = document.getElementById('frontNote');
+  if (card.note) { fn.style.display = 'block'; fn.textContent = '💡 ' + card.note; }
+  else fn.style.display = 'none';
+
+  document.getElementById('backCat').textContent = "English";
+  document.getElementById('backMain').textContent = card.en;
+  document.getElementById('backSub').textContent = card.es;
+  const bn = document.getElementById('backNote');
+  bn.style.display = 'none';
+
+  document.getElementById('cardNum').textContent = current + 1;
+  document.getElementById('cardSlash').textContent = '/ ' + filteredDeck.length;
+
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === filteredDeck.length - 1;
+
+  updateStats();
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('cardWrapper').classList.toggle('flipped', flipped);
+}
+
+function nextCard() {
+  if (current < filteredDeck.length - 1) { current++; renderCard(); }
+}
+
+function prevCard() {
+  if (current > 0) { current--; renderCard(); }
+}
+
+function markCard(knew) {
+  const card = filteredDeck[current];
+  const id = ALL_CARDS.indexOf(card);
+  if (knew) { learned.add(id); missed.delete(id); }
+  else { missed.add(id); learned.delete(id); }
+  const feedback = document.getElementById('scoreFeedback');
+  feedback.innerHTML = knew
+    ? '<strong>✓ Marked as known!</strong> Keep going.'
+    : '✗ Added to review list. You\'ll get it!';
+  setTimeout(() => {
+    feedback.textContent = 'Mark whether you knew the card to track progress';
+    if (current < filteredDeck.length - 1) nextCard();
+  }, 900);
+  updateStats();
+}
+
+function updateStats() {
+  const relevantLearned = filteredDeck.filter((c, i) => learned.has(deck.indexOf(c))).length;
+  document.getElementById('learnedCount').textContent = relevantLearned;
+  document.getElementById('totalCount').textContent = filteredDeck.length;
+  document.getElementById('progressFill').style.width =
+    filteredDeck.length ? (relevantLearned / filteredDeck.length * 100) + '%' : '0%';
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  filteredDeck = getFilteredDeck();
+  current = 0;
+  renderCard();
+}
+
+function resetProgress() {
+  learned.clear(); missed.clear();
+  current = 0;
+  renderCard();
+  updateStats();
+}
+
+function reviewMissed() {
+  const missedCards = ALL_CARDS.filter((_, i) => missed.has(i));
+  if (!missedCards.length) {
+    alert("No missed cards yet! Work through the deck and mark any you don't know.");
+    return;
+  }
+  deck = [...missedCards];
+  filteredDeck = deck;
+  activeCategory = "All";
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab')[0].classList.add('active');
+  current = 0;
+  renderCard();
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') nextCard();
+  if (e.key === 'ArrowLeft') prevCard();
+  if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  if (e.key === 'y' || e.key === 'Y') markCard(true);
+  if (e.key === 'n' || e.key === 'N') markCard(false);
+});
+
+buildTabs();
+filteredDeck = getFilteredDeck();
+renderCard();
+</script>
+</body>
+</html>
